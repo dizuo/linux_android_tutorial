@@ -6,3 +6,4 @@ ndk_tutorial
 * o文件，对应windows系的obj文件
 * so文件，对应windows系的dll动态链接库文件
 
+[参考](http://wowubuntu.com/markdown/) Markdown语法说明.
