@@ -12,10 +12,10 @@ include $(PREBUILT_SHARED_LIBRARY)
 ## 每次build时会清空libs/armeabi下面的所有so包.
 ## 将指定的so包拷贝到libs/armeabi目录下，
 # 
-include $(CLEAR_VARS)
-LOCAL_MODULE := navengine-prebuilt
-LOCAL_SRC_FILES := libnavengine.so
-include $(PREBUILT_SHARED_LIBRARY)
+# include $(CLEAR_VARS)
+# LOCAL_MODULE := navengine-prebuilt
+# LOCAL_SRC_FILES := libnavengine.so
+# include $(PREBUILT_SHARED_LIBRARY)
 
 #
 ## 主模块定义
