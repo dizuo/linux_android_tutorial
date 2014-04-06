@@ -1,0 +1,5 @@
+directory struct : 
+ Makefile
+ main.c
+ header/global.h
+ src/test.c

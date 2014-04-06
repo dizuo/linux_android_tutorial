@@ -1,0 +1,13 @@
+tput civis
+
+while [ 1 ]
+do
+    tput clear
+    tput cup 3 10
+    tput setb
+    tput setf 2
+    echo $(date "+%Y--%m--%d %H:%M:%S  %A")
+    sleep 1
+
+done
+

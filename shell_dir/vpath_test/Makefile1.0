@@ -1,0 +1,16 @@
+vpath %.c ./src     # 增加在./src中搜索c文件
+vpath %.h ./header  # 增加在./header中搜索h文件
+
+BIN_NAME = main     # 变量定义类似c中宏
+OBJ_NAME = main.o test.o
+
+$(BIN_NAME) : $(OBJ_NAME)
+	gcc -o $(BIN_NAME) $(OBJ_NAME)  -I ./header
+
+main.o : main.c global.h
+
+test.o : test.c
+
+.PHONY : clean
+clean:
+	-rm *.o $(BIN_NAME)
