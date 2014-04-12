@@ -12,7 +12,7 @@ TARGET = main     # 变量定义类似c中宏
 
 INCDIR = -I"./header"
 
-LIBDIR = -L"/usr/local/lib"
+LIBDIR = -L"/usr/local"
 
 LIBS = ""
 

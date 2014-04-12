@@ -3,3 +3,6 @@ directory struct :
  main.c
  header/global.h
  src/test.c
+ util/include/util.h
+ util/src/util.c
+
