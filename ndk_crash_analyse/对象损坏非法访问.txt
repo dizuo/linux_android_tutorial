@@ -1,0 +1,67 @@
+1.调用堆栈：
+********** Crash dump: **********
+Build fingerprint: 'samsung/h3gzc/hlte:4.3/JSS15J/N9006ZCUDMK2:user/release-keys'
+pid: 14538, tid: 14538  >>> com.tencent.map <<<
+signal 11 (SIGSEGV), fault addr 00000300
+Stack frame #00  pc 0002bd6c  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine GetCityIndexByCode in jni/streetroad/streetviewroad/map_road_overlay_data.cpp:141
+Stack frame #01  pc 0002bef4  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine GetBlockRect in jni/streetroad/streetviewroad/map_road_overlay_data.cpp:265
+Stack frame #02  pc 0002c5aa  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine GetBlock in jni/streetroad/streetviewroad/map_road_overlay_streetview.cpp:200
+Stack frame #03  pc 0002c200  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine WriteStreetviewRoadBlocks in jni/streetroad/streetviewroad/map_road_overlay_render.cpp:198
+Stack frame #04  pc 0002b6b0  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine WriteRoadBlocks in jni/streetroad/streetviewroad/map_road_activity.cpp:104
+Stack frame #05  pc 0002d43a  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine QWriteStreetviewRoadBlock in jni/streetroad/streetviewroad/qstreetview_road_api.cpp:55
+Stack frame #06  pc 00014d2a  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine handleStreetViewRoadResult in jni/gl/GLMapLib/Main/GLTextureManager.cpp:1897
+Stack frame #07  pc 00014e38  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine writeDownloadData in jni/gl/GLMapLib/Main/GLTextureManager.cpp:1626
+Stack frame #08  pc 00012596  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine writeDownloadData in jni/gl/GLMapLib/Main/GLMapWorld.cpp:3211
+Stack frame #09  pc 00008782  /data/app-lib/com.tencent.map-1/libmapengine.so: Routine GLMapWriteDownloadData in jni/gl/GLMapLib/Interface/GLMapLib.cpp:108
+Stack frame #10  pc 0002ab7a  /data/app-lib/com.tencent.map-1/libmapengine.so (Java_com_tencent_map_gl_JNI_nativeWriteMapDataBlock      : Routine Java_com_tencent_map_gl_JNI_nativeWriteMapDataBlock in jni/jni/com_tencent_map_gl_JNI.cpp:254
+Stack frame #11  pc 00020c0c  /system/lib/libdvm.so (dvmPlatformInvoke)
+Stack frame #12  pc 0005178c  /system/lib/libdvm.so (_Z16dvmCallJNIMethodPKjP6JValuePK6MethodP6Thread)
+Stack frame #13  pc 0002a0a0  /system/lib/libdvm.so
+Stack frame #14  pc 0002ea80  /system/lib/libdvm.so (_Z12dvmInterpretP6ThreadPK6MethodP6JValue)
+Stack frame #15  pc 0006390e  /system/lib/libdvm.so (_Z14dvmCallMethodVP6ThreadPK6MethodP6ObjectbP6JValueSt9__va_list)
+Stack frame #16  pc 00063936  /system/lib/libdvm.so (_Z13dvmCallMethodP6ThreadPK6MethodP6ObjectP6JValuez)
+Stack frame #17  pc 0005869a  /system/lib/libdvm.so
+Stack frame #18  pc 0000cbe0  /system/lib/libc.so (__thread_entry)
+Stack frame #19  pc 0000cd5c  /system/lib/libc.so (pthread_create)	
+	
+2. C++源码堆栈：  
+【Frame02】
+MapRoadStreetviewOverlay::GetBlock(const SBlockIndex& index)
+{
+	return _streetCfg.GetBlockRect(index.cityId, index.levelNo, index.blockNo);
+}
+
+【Frame01】
+// GetBlockRect函数源码：
+TXMapRect StreetRoadConfig::GetBlockRect(int cityCode, int level, int blockId)
+{
+	int index = GetCityIndexByCode(cityCode);
+		
+	// ...其他内容...
+}
+
+【Frame00】
+int StreetRoadConfig::GetCityIndexByCode(int cityCode)
+{
+	int index = 0;
+	// 查找城市在m_cityInfo数组中的位置
+	for(index = 0; index < _cityNum && _cityInfoTable[index].cityId != cityCode; index++)
+		;
+
+	return index==_cityNum ? -1 : index;
+}
+
+3.objdump以后的引擎汇编源码：
+
+0002bd66 <_ZN3svr16StreetRoadConfig18GetCityIndexByCodeEi>:
+   2bd66:	b530      	push	{r4, r5, lr}
+   2bd68:	2200      	movs	r2, #0			; 将r2寄存器清零
+   2bd6a:	1c03      	adds	r3, r0, #0		; r0存储this指针地址, r3 = r0 + 0为对象数据成员_cityNum地址
+   2bd6c:	6804      	ldr	r4, [r0, #0]		; 取r0+0的值放入r4寄存器中。 	##### 此处CRASH，说明this指针已经损坏，对象被销毁#####
+   2bd6e:	1c10      	adds	r0, r2, #0		; r0 = r2 + 0 
+   2bd70:	42a0      	cmp	r0, r4				; r4 存储_cityNum的值, r0为index值
+   2bd72:	da07      	bge.n	2bd84 <_ZN3svr16StreetRoadConfig18GetCityIndexByCodeEi+0x1e>	; bge branch great equal, 如果index >= _cityNum则 跳到 2db84位置
+   2bd74:	68dd      	ldr	r5, [r3, #12]
+
+Crash在【2bd6c】位置，而且【Frame02】中_streetCfg为静态对象不是指针，crash原因一定是访问非法对象。
+
