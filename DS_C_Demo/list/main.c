@@ -10,13 +10,18 @@ void print(node_ptr_t n)
 	{
 		return;
 	}
+    
+    int* ptr = (int*)n->data;
 
-	printf("%d\t", n->data);
+	printf("%d\t", *ptr);
 }
 
 int my_cmp(dat_t one, dat_t two)
 {
-	return one - two;
+    int* p1 = (int*)one;
+    int* p2 = (int*)two;
+    
+	return *p1 - *p2;
 }
 
 int my_atoi(const char* str, int* pval)
@@ -44,6 +49,8 @@ int my_atoi(const char* str, int* pval)
 	return 0;
 }
 
+void list_test(int num);
+
 int main(int argn, char* argv[])
 {
 	if (argn != 2)
@@ -51,42 +58,77 @@ int main(int argn, char* argv[])
 		printf("bad parameters\n");
 		return 1;
 	}
-
-	srand(time(NULL));
-
-	int list_nm;
+    
+    int list_nm;
 	if ( my_atoi(argv[1], &list_nm) != 0 )
 	{
 		printf("please input value \n");
 		return 1;
 	}
-
-	printf("argv[1] = %d\n", list_nm);
-
-	int k = -1;
-
-	node_ptr_t head = list_create(k);
-
-	k++;
-
-	while (k < list_nm)
-	{
-		int val = rand() % 100;
-		// list_insert(head, val);
-		list_insert_sort(head, val, my_cmp);
-		++k;
-	}
-
-	list_traverse(head, print);
-	list_reverse(head);
-	printf("\nAfter reverse: \n");
-	list_traverse(head, print);
-
-	list_destroy(&head);
+    
+    list_test(list_nm);
 
 	printf("\nany key pressed to exit ... \n");
 
 	getchar();
 
 	return 0;
+}
+
+void list_test(int list_nm)
+{
+    srand(time(NULL));
+    
+	printf("argv[1] = %d\n", list_nm);
+    
+	node_ptr_t head = NULL;
+    
+    int* buffer = (int*)malloc(sizeof(int) * list_nm);
+    
+	int k = 0;
+    
+	while (k < list_nm)
+	{
+		buffer[k] = rand() % 100;
+		list_insert_sort(&head, buffer + k, my_cmp);
+		++k;
+	}
+    
+	list_traverse(&head, print);
+	list_reverse(&head);
+	printf("\nAfter reverse: \n");
+	list_traverse(&head, print);
+    
+    // list erase.
+    for (int k = 0; k < 100; k++)
+    {
+        int val = rand() % 100;
+        
+        if (list_erase_node(&head, &val, my_cmp) == 0)
+        {
+            printf("\nerase [%d]\n", val);
+            list_traverse(&head, print);
+            printf("\n");
+        }
+    }
+    
+	list_destroy(&head);
+    free(buffer);
+    
+    //
+    {
+        int val = 3;
+        list_insert(&head, &val);
+        list_traverse(&head, print);
+        printf("\n");
+        
+        int val1 = 30;
+        list_insert(&head, &val1);
+        list_reverse(&head);
+        list_traverse(&head, print);
+        printf("\n");
+        
+        list_destroy(&head);
+    }
+    
 }
