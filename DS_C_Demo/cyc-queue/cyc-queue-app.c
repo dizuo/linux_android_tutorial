@@ -46,7 +46,7 @@ dat_t cyc_queue_pop_front(cyc_que_t* cyc_que)
 
 	return val;
 }
-
+// TODO 
 void cyc_queue_traverse(cyc_que_t* cyc_que, cyc_queue_dump_ft dumpft)
 {
 	CYC_QUEUE_CHECK(cyc_que, );
