@@ -18,12 +18,15 @@ void lock_func(void* arg)
 	pid = getpid();
 	tid = pthread_self();
 
+	// printf("%s pid: %u tid: %u (0x%x)\n", str, (unsigned int)pid, (unsigned int) tid, (unsigned int)tid);
+
 	printf("want to lock mutex, msg=%s, tid=%u\n", (char*)arg, (uint_t)tid);
 	
 	pthread_mutex_lock( &mt );
 	printf("I[tid=%u] am using, (*|^_^|*)\n", (uint_t)tid);
 	sleep(10);
 	pthread_mutex_unlock( &mt );
+
 }
 
 void try_lock_func(void* arg)
@@ -56,18 +59,22 @@ int main()
 	const char* msg1 = "block";
 	const char* msg2 = "unblock";
 	
-	rc = pthread_create(&pt1, NULL, (void*)&lock_func, (void*)msg1);	if (rc != 0) 
+	rc = pthread_create(&pt1, NULL, (void*)&lock_func, (void*)msg1);
+	if (rc != 0) 
 	{
 		XX_CREATE_FAILED(rc);
 	}
 	
-	rc = pthread_create(&pt2, NULL, (void*)&lock_func, (void*)msg1);	if (rc != 0)
+	rc = pthread_create(&pt2, NULL, (void*)&lock_func, (void*)msg1);
+	if (rc != 0)
 	{
 		XX_CREATE_FAILED(rc);
 	}
+
 	sleep(1);
 	
-	rc = pthread_create(&pt3, NULL, (void*)&try_lock_func, (void*)msg2);	if (rc != 0)
+	rc = pthread_create(&pt3, NULL, (void*)&try_lock_func, (void*)msg2);
+	if (rc != 0)
 	{
 		XX_CREATE_FAILED(rc);
 	}
@@ -75,5 +82,7 @@ int main()
 	pthread_join(pt1, NULL);
 	pthread_join(pt2, NULL);
 	pthread_join(pt3, NULL);	
+	
 	return 0;
 }
+

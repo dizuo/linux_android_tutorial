@@ -1,0 +1,3 @@
+CMD:
+	gcc -Wall -o pt_lock pt_lock.c -lpthread
+
