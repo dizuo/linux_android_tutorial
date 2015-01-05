@@ -1,0 +1,30 @@
+1 liba===>
+g++ -MMD -MP -MF ./obj/local/armeabi/objs/mapengine/src/gc/gc_bitmap.o.d -fpic -ffunction-sections 
+	-funwind-tables -fstack-protector -no-canonical-prefixes -march=armv5te -mtune=xscale -msoft-float 
+	-fno-exceptions -fno-rtti -mthumb -Os -g -DNDEBUG -fomit-frame-pointer -fno-strict-aliasing 
+	-finline-limit=64 
+	-DANDROID -DANDROID_NDK -DGC_PIX_RGB565 -DES_ANDROID -DNEW_ENGINE -DUSE_SYSTEM_FONT
+	-funwind-tables -fvisibility=hidden -DNO_SUPPORT_GL_GET_FLOAT 
+	-Wa,--noexecstack -Wformat -Werror=format-security    
+	-c  jni/src/gc/gc_bitmap.cpp -o ./obj/local/armeabi/objs/mapengine/src/gc/gc_bitmap.o 
+
+2 Application.mk中加上语句APP_OPTIM := release，编译.a没有任何变化：
+g++ -MMD -MP -MF ./obj/local/armeabi/objs/mapengine/src/gc/gc_bitmap.o.d -fpic -ffunction-sections
+	-funwind-tables -fstack-protector -no-canonical-prefixes -march=armv5te -mtune=xscale -msoft-float
+	-fno-exceptions -fno-rtti -mthumb -Os -g -DNDEBUG -fomit-frame-pointer -fno-strict-aliasing 
+	-finline-limit=64 
+	-DANDROID -DANDROID_NDK -DGC_PIX_RGB565 -DES_ANDROID -DNEW_ENGINE -DUSE_SYSTEM_FONT 
+	-funwind-tables -fvisibility=hidden -DNO_SUPPORT_GL_GET_FLOAT 
+	-Wa,--noexecstack -Wformat -Werror=format-security 
+	-c  jni/src/gc/gc_bitmap.cpp -o ./obj/local/armeabi/objs/mapengine/src/gc/gc_bitmap.o 
+	
+3 source===>
+g++ -MMD -MP -MF ./obj/local/armeabi/objs/txmapengine/src/gc/gc_bitmap.o.d -fpic -ffunction-sections 
+	-funwind-tables -fstack-protector -no-canonical-prefixes -march=armv5te -mtune=xscale -msoft-float 
+	-fno-exceptions -fno-rtti -mthumb -Os -g -DNDEBUG -fomit-frame-pointer -fno-strict-aliasing 
+	-finline-limit=64 
+	-DANDROID -DANDROID_NDK -DGC_PIX_RGB565 -DES_ANDROID -DNEW_ENGINE -DUSE_SYSTEM_FONT 
+	-funwind-tables -fvisibility=hidden -DNO_SUPPORT_GL_GET_FLOAT
+	-Wa,--noexecstack -Wformat -Werror=format-security 
+	-c  jni/src/gc/gc_bitmap.cpp -o ./obj/local/armeabi/objs/txmapengine/src/gc/gc_bitmap.o 
+
