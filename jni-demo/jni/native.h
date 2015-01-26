@@ -2,15 +2,23 @@
 #define NATIVE_H
 
 #include <jni.h>
+#include <GLES/gl.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-JNIEXPORT jlong JNICALL Java_com_dizuo_jnidemo_JNI_nativeInit(JNIEnv *env, jobject thiz);
+JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeInit(JNIEnv *env, jobject thiz);
 
-JNIEXPORT jlong JNICALL Java_com_dizuo_jnidemo_JNI_nativeTestCallback(JNIEnv* env, jobject thiz, jlong handle);
+JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeTestCallback(JNIEnv* env, jobject thiz, jlong handle);
 
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLInit(JNIEnv *env, jobject thiz, jstring dir);
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLReshape(JNIEnv *env, jobject thiz, jint width, jint height);
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLRender(JNIEnv *env, jobject thiz);
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLAdjustView(JNIEnv *env, jobject thiz, jfloat d_angx, jfloat d_angy, jfloat d_camz);
 
 #ifdef __cplusplus
 }

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <jni.h>
 
+#include "gl_world.h"
 #include "native.h"
 
 int global_var = 5;
@@ -80,7 +81,7 @@ static jobject callback(void* context, int what, int arg1, jstring arg2)
 
 
 // com.dizuo.jni_demo/nativeInit
-JNIEXPORT jlong JNICALL Java_com_dizuo_jnidemo_JNI_nativeInit(JNIEnv *env, jobject thiz)
+JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeInit(JNIEnv *env, jobject thiz)
 {
 	int* engine_handle = &global_var;
 
@@ -95,7 +96,7 @@ JNIEXPORT jlong JNICALL Java_com_dizuo_jnidemo_JNI_nativeInit(JNIEnv *env, jobje
 	return (jlong)context;
 }
 
-JNIEXPORT jlong JNICALL Java_com_dizuo_jnidemo_JNI_nativeTestCallback(JNIEnv* env, jobject thiz, jlong handle)
+JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeTestCallback(JNIEnv* env, jobject thiz, jlong handle)
 {
 	unsigned short nameBuf[] = {35140, 38451, 24066};
 
@@ -113,4 +114,33 @@ JNIEXPORT jlong JNICALL Java_com_dizuo_jnidemo_JNI_nativeTestCallback(JNIEnv* en
 	ret = callback(&context->cbContext, type, arg, jname);
 
 	return (jlong)ret;
+}
+
+GLWorld gl_world;
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLInit(JNIEnv *env, jobject thiz, jstring dir)
+{
+	const char* c_data_dir = env->GetStringUTFChars(dir, NULL);
+
+	gl_world.gl_init(c_data_dir);
+
+	if (dir)
+	{
+		env->ReleaseStringUTFChars(dir, c_data_dir);
+	}
+}
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLReshape(JNIEnv *env, jobject thiz, jint width, jint height)
+{
+	gl_world.gl_reshape(width, height);
+}
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLRender(JNIEnv *env, jobject thiz)
+{
+	gl_world.gl_render();
+}
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLAdjustView(JNIEnv *env, jobject thiz, jfloat d_angx, jfloat d_angy, jfloat d_camz)
+{
+	gl_world.gl_adjust_view(d_angx, d_angy, d_camz);
 }
