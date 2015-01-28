@@ -14,10 +14,11 @@ public class JNI {
     
     public native long nativeTestCallback(long context);
     
-    public native void nativeGLInit(String dir);
+    public native int nativeGLLoadData(String dir);
     public native void nativeGLReshape(int width, int height);
     public native void nativeGLRender();
     public native void nativeGLAdjustView(float delta_angx, float delta_angy, float delta_camz);
+    public native void nativeGLTrackball(int type, int ex, int ey);
     
     public Object callback(int what, int arg1, String arg2) {
         Object param = null;

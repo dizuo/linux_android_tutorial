@@ -118,16 +118,18 @@ JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeTestCallback(JNIEnv* en
 
 GLWorld gl_world;
 
-JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLInit(JNIEnv *env, jobject thiz, jstring dir)
+JNIEXPORT int JNICALL Java_com_dizuo_parking_JNI_nativeGLLoadData(JNIEnv *env, jobject thiz, jstring dir)
 {
 	const char* c_data_dir = env->GetStringUTFChars(dir, NULL);
 
-	gl_world.gl_init(c_data_dir);
+	int ret = gl_world.gl_load_data(c_data_dir);
 
 	if (dir)
 	{
 		env->ReleaseStringUTFChars(dir, c_data_dir);
 	}
+
+	return ret;
 }
 
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLReshape(JNIEnv *env, jobject thiz, jint width, jint height)
@@ -138,6 +140,15 @@ JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLReshape(JNIEnv *env, j
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLRender(JNIEnv *env, jobject thiz)
 {
 	gl_world.gl_render();
+}
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLTrackball(JNIEnv *env, jobject thiz, jint type, jint x, jint y)
+{
+	if (type == 0) {
+		gl_world.gl_begin_track(x, y);
+	} else if (type == 1) {
+		gl_world.gl_tracking(x, y);
+	}
 }
 
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLAdjustView(JNIEnv *env, jobject thiz, jfloat d_angx, jfloat d_angy, jfloat d_camz)

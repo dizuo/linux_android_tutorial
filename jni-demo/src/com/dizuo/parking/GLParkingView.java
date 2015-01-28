@@ -6,6 +6,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.util.FloatMath;
+import android.util.Log;
 import android.view.MotionEvent;
 
 public class GLParkingView extends GLSurfaceView {
@@ -26,7 +27,9 @@ public class GLParkingView extends GLSurfaceView {
 		
 		mRender = new ParkingRenderer();
 		setRenderer(mRender);
-		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		// setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+		
 	}
 	
 	private float spacing(MotionEvent event) {
@@ -40,6 +43,7 @@ public class GLParkingView extends GLSurfaceView {
         float y = e.getY();
         switch (e.getAction() & MotionEvent.ACTION_MASK) {
         case MotionEvent.ACTION_DOWN:
+        	mJni.nativeGLTrackball(0, (int)x, (int)y);
         	mActMode = 1;
         	break;
         case MotionEvent.ACTION_UP:
@@ -54,13 +58,7 @@ public class GLParkingView extends GLSurfaceView {
         	float delta_cameraz = 0;
         	
         	if (mActMode == 1) {
-	            float dx = x - mPreviousX;
-	            float dy = y - mPreviousY;
-	            
-	            delta_anglex = dx * TOUCH_SCALE_FACTOR;
-	            delta_angley = dy * TOUCH_SCALE_FACTOR;
-	            
-	            mJni.nativeGLAdjustView(delta_anglex, delta_angley, delta_cameraz);
+        		mJni.nativeGLTrackball(1, (int)x, (int)y);
 	            requestRender();
         	}
         	else if (mActMode >= 2) {
@@ -71,7 +69,7 @@ public class GLParkingView extends GLSurfaceView {
         		else if (newDist < mOldDist) {
         			delta_cameraz = -0.1f;	// zoom out
         		}
-        		mJni.nativeGLAdjustView(delta_anglex, delta_angley, delta_cameraz);
+         		mJni.nativeGLAdjustView(delta_anglex, delta_angley, delta_cameraz);
                 requestRender();
         	}        	
         	
@@ -81,9 +79,7 @@ public class GLParkingView extends GLSurfaceView {
         	mActMode += 1;
         	break;       	
         	
-        }
-        mPreviousX = x;
-        mPreviousY = y;
+        }        
         return true;
 	}
 	
@@ -94,7 +90,7 @@ public class GLParkingView extends GLSurfaceView {
 		}
 		
 		public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-			mJni.nativeGLInit("");
+			
 		}
 		
 		public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -106,10 +102,6 @@ public class GLParkingView extends GLSurfaceView {
 		}
 
 	}
-	
-	private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
-	private float mPreviousX;
-	private float mPreviousY;
 	
 	private float mActMode = 0;
 	private float mOldDist = 0;
