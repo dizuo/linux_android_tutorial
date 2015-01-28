@@ -26,6 +26,8 @@ public class MainActivity extends Activity {
 	
 	private String mDataDir;
 	
+	public JNI mJni = new JNI();
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -34,7 +36,7 @@ public class MainActivity extends Activity {
 		
 		// mGLView = new GLTestView(this);
 		
-		mGLView = new GLParkingView(this);
+		mGLView = new GLParkingView(this, mJni);
 		
         setContentView(mGLView);
         mGLView.requestFocus();
@@ -43,6 +45,31 @@ public class MainActivity extends Activity {
         if (initResourceFiles() != 0) {
         	Log.i("dizuo", "initResourceFiles FAILED.");
         }
+        
+        // 加载数据和资源.
+        Thread workThread = new Thread( new Runnable() {
+        	@Override 
+        	public void run() {
+        		
+        		while (true) {
+        			
+        			Log.i("dizuo", "prepare to load data");        			
+	        		int ret = mJni.nativeGLLoadData(mDataDir);	        		
+	        		Log.i("dizuo", "ret = " + ret);
+	        		
+	        		if (ret == 0 || ret < 0) {
+	        			mGLView.requestRender();	        			
+	        			break;
+	        		}
+	        		
+	        		mGLView.requestRender();
+        		}
+        		
+        		Log.i("dizuo", "exit work thread");
+        	}
+        });
+        
+        workThread.start();
         
 	}
 

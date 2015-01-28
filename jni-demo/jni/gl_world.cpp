@@ -1,4 +1,5 @@
 #include "gl_world.h"
+#include "under_park.h"
 
 #if defined(ES_ANDROID) || defined(__APPLE__)
 #include <GLES/gl.h>
@@ -32,16 +33,41 @@ double min(double a, double b)
 GLWorld::GLWorld() 
 : m_cameraz(-10.0f), m_fovy(60.0f)
 , m_arcball(0, 0)
+, m_park(NULL)
 {
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "contrct");
+
+	m_park = new UnderPark();
+
+	pthread_mutex_init(&dataMutex, NULL);
+	//pthread_mutex_init(&eventMutex, NULL);
 }
 
 GLWorld::~GLWorld()
 {
+	pthread_mutex_destroy(&dataMutex);
+	//pthread_mutex_destroy(&eventMutex);
 }
 
 int GLWorld::gl_load_data(const char* root_dir)
 {
-	int ret = 0;
+	// TODO 跨线程问题么？？？为何此处为m_fovy为0.
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "load_data, fovy = %f", m_fovy);
+
+	if (m_park == NULL)
+	{
+		return SYS_ERROR;
+	}
+
+	m_fovy = 60.0f;
+
+	pthread_mutex_lock(&dataMutex);
+	int ret = m_park->load_data(root_dir);
+	m_cameraz = -m_park->get_cameraz(m_fovy*0.5f);
+	pthread_mutex_unlock(&dataMutex);
+
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "cameraz = %f", m_cameraz);
+
 	return ret;
 }
 
@@ -55,7 +81,9 @@ void GLWorld::gl_reshape(int width, int height)
 	glLoadIdentity();
 	gluPerspective(m_fovy, (float)width / (float)height, 0.001, 1000.0);
 
+	// pthread_mutex_lock(&eventMutex);
 	m_arcball.SetWnd(width, height);
+	// pthread_mutex_unlock(&eventMutex);
 }
 
 void GLWorld::gl_render()
@@ -67,21 +95,25 @@ void GLWorld::gl_render()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(0.0f, 0.0f, m_cameraz);	// set camera position.
-
+	
+	//pthread_mutex_lock(&eventMutex);
 	m_arcball.toOpenGL();
+	//pthread_mutex_unlock(&eventMutex);
 
 	glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+	
+	pthread_mutex_lock(&dataMutex);
+	m_park->render();
+	pthread_mutex_unlock(&dataMutex);
 
 	int old_width = 0;
 	glGetIntegerv(GL_LINE_WIDTH, &old_width);
 	glLineWidth(2.0f);
 
-	_render_board();
+	// _render_board();
 
 	glLineWidth(old_width);
 
-	int err = glGetError();
-	__android_log_print(ANDROID_LOG_INFO, "dizuo", "gl_render, ret = %d", err);
 }
 
 void GLWorld::_render_board()
@@ -99,12 +131,18 @@ void GLWorld::gl_destroy()
 
 void GLWorld::gl_begin_track(int x, int y)
 {
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "begin track...");
+	//pthread_mutex_lock(&eventMutex);
 	m_arcball.BeginTracking(x, y);
+	//pthread_mutex_unlock(&eventMutex);
 }
 
 void GLWorld::gl_tracking(int x, int y)
 {
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "tracking...");
+	//pthread_mutex_lock(&eventMutex);
 	m_arcball.Tracking(x, y);
+	//pthread_mutex_unlock(&eventMutex);
 }
 
 void GLWorld::gl_adjust_view(float d_angx, float d_angy, float d_camez)

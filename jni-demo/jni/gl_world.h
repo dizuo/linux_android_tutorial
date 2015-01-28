@@ -31,10 +31,15 @@ private:
 
 	void _render_board();
 
+	pthread_mutex_t dataMutex;
+	pthread_mutex_t eventMutex;	// trackball.
+
 	Trackball m_arcball;
 
 	float m_cameraz;
 	float m_fovy;
+
+	UnderPark* m_park;
 
 };
 

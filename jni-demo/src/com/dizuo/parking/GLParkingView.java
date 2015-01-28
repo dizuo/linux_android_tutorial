@@ -15,10 +15,12 @@ public class GLParkingView extends GLSurfaceView {
 	
 	public long nativeContext = 0;
 	
-	public JNI mJni = new JNI();
+	public JNI mJni;
 	
-	public GLParkingView(Context context) {
+	public GLParkingView(Context context, JNI jni) {
 		super(context);
+		
+		mJni = jni;
 		
 		nativeContext = mJni.nativeInit();		
 		if (nativeContext != 0) {
@@ -27,8 +29,8 @@ public class GLParkingView extends GLSurfaceView {
 		
 		mRender = new ParkingRenderer();
 		setRenderer(mRender);
-		// setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-		setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		// setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 		
 	}
 	
@@ -98,6 +100,8 @@ public class GLParkingView extends GLSurfaceView {
 		}
 		
 		public void onDrawFrame(GL10 gl) {
+			Log.i("dizuo", "render");
+			
 			mJni.nativeGLRender();
 		}
 
