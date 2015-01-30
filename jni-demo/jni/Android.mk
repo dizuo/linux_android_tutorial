@@ -11,7 +11,7 @@ LOCAL_SRC_FILES := native.cpp \
 	under_park.cpp \
 	trackball.cpp \
 	
-LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -lGLESv1_CM -llog
+LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -lGLESv1_CM -llog -ljnigraphics
 
 LOCAL_CFLAGS := -DES_ANDROID\
 	-DANDROID_NDK \

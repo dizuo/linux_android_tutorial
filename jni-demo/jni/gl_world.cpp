@@ -35,8 +35,6 @@ GLWorld::GLWorld()
 , m_arcball(0, 0)
 , m_park(NULL)
 {
-	__android_log_print(ANDROID_LOG_INFO, "dizuo", "contrct");
-
 	m_park = new UnderPark();
 
 	pthread_mutex_init(&dataMutex, NULL);

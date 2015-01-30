@@ -27,7 +27,9 @@ public class MainActivity extends Activity {
 	private String mDataDir;
 	
 	public JNI mJni = new JNI();
-
+	
+	public long mNativeContext = 0;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -36,15 +38,21 @@ public class MainActivity extends Activity {
 		
 		// mGLView = new GLTestView(this);
 		
+		if (initResourceFiles() != 0) {
+        	Log.i(JNI.sTag, "initResourceFiles FAILED.");
+        }
+		
+		mNativeContext = mJni.nativeInit();		
+		if (mNativeContext != 0) {
+			mJni.nativeTestCallback(mNativeContext);
+		}
+		
+		mJni.mDataPath = mDataDir;
 		mGLView = new GLParkingView(this, mJni);
 		
         setContentView(mGLView);
         mGLView.requestFocus();
         mGLView.setFocusableInTouchMode(true);
-        
-        if (initResourceFiles() != 0) {
-        	Log.i("dizuo", "initResourceFiles FAILED.");
-        }
         
         // 加载数据和资源.
         Thread workThread = new Thread( new Runnable() {
@@ -53,9 +61,9 @@ public class MainActivity extends Activity {
         		
         		while (true) {
         			
-        			Log.i("dizuo", "prepare to load data");        			
-	        		int ret = mJni.nativeGLLoadData(mDataDir);	        		
-	        		Log.i("dizuo", "ret = " + ret);
+        			Log.i(JNI.sTag, "prepare to load data");
+	        		int ret = mJni.nativePrepareGLData(mDataDir, mNativeContext);	        		
+	        		Log.i(JNI.sTag, "ret = " + ret);
 	        		
 	        		if (ret == 0 || ret < 0) {
 	        			mGLView.requestRender();	        			
@@ -73,10 +81,16 @@ public class MainActivity extends Activity {
         
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		mJni.nativeDestroy(mNativeContext);
+	}
+	
 	public int initResourceFiles() {
         String sdcard_dir = getSDCardPath();
         
-        Log.i("dizuo", sdcard_dir);
+        Log.i(JNI.sTag, sdcard_dir);
         mDataDir = sdcard_dir + "/parking_demo/";
         File file = new File(mDataDir);
         if (!file.exists()) {

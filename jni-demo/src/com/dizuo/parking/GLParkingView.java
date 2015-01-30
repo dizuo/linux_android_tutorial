@@ -13,19 +13,12 @@ public class GLParkingView extends GLSurfaceView {
 	
 	private ParkingRenderer mRender;
 	
-	public long nativeContext = 0;
-	
 	public JNI mJni;
 	
 	public GLParkingView(Context context, JNI jni) {
 		super(context);
 		
-		mJni = jni;
-		
-		nativeContext = mJni.nativeInit();		
-		if (nativeContext != 0) {
-			mJni.nativeTestCallback(nativeContext);
-		}
+		mJni = jni;	
 		
 		mRender = new ParkingRenderer();
 		setRenderer(mRender);
@@ -100,7 +93,7 @@ public class GLParkingView extends GLSurfaceView {
 		}
 		
 		public void onDrawFrame(GL10 gl) {
-			Log.i("dizuo", "render");
+			Log.i(JNI.sTag, "render");
 			
 			mJni.nativeGLRender();
 		}

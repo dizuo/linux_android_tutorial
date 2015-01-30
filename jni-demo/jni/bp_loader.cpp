@@ -1,6 +1,7 @@
 #include "bp_loader.h"
 
 #include <cmath>
+#include <stdlib.h>
 
 #ifdef WIN32
 	#include <gl/glut.h>
@@ -39,6 +40,51 @@ bool BPLoader::create_from_file(const char* fname)
 
 	}
 
+	return true;
+}
+
+bool BPLoader::load_poi_file(const char* fname)
+{
+	FILE* fp = fopen(fname, "r");
+	if (!fp)
+	{
+		printf("failed to open file [ %s ]\n", fname);
+		return false;
+	}
+
+	const char* token = " ,";
+	char buffer[1024];
+	while (fgets(buffer, 1024, fp))
+	{
+		char* pch = strtok(buffer, token);
+		poi_t item;
+		memset(&item, 0, sizeof(poi_t));
+
+		if (pch)
+		{
+			item.pos.x = atof(pch);
+			pch = strtok(NULL, token); 
+			if (pch)
+			{
+				item.pos.y = atof(pch);
+				pch = strtok(NULL, token);
+				if (pch)
+				{
+					strcpy(item.name, pch);
+				}
+			}
+
+			m_poivec.push_back(item);
+		}
+
+	}
+	fclose(fp);
+
+	return true;
+}
+
+int BPLoader::transform_poi_to_renderable()
+{
 	return true;
 }
 

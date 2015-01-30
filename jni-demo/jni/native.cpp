@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <jni.h>
+#include <android/log.h>
+#include <android/bitmap.h>
 
 #include "gl_world.h"
 #include "native.h"
@@ -27,6 +30,12 @@ typedef struct _context {
 	void *handle;
 	CBContext cbContext;
 } Context;
+
+typedef struct _textBitmap {
+	unsigned char* buffer;
+	int width;
+	int height;
+} text_bmp_t;
 
 static JNIEnv *getEnv(CBContext *context) {
 	JavaVM *jvm = context->jvm;
@@ -59,6 +68,26 @@ static jstring getJString(JNIEnv *env, unsigned short *cstr, int strLen) {
 	return (jstring) env->NewString((const jchar*) cstr, strLen);
 }
 
+//char* to jstring
+//NOTICE: you need free return value,like  (*env)->DeleteLocalRef( env, myObj );
+static jstring charToJstring(JNIEnv* env, const char* pat)
+{
+	jclass strClass = env->FindClass("java/lang/String");
+
+	jmethodID ctorID = env->GetMethodID(strClass, "<init>", "([BLjava/lang/String;)V");
+
+	jbyteArray bytes = env->NewByteArray(strlen(pat));
+
+	env->SetByteArrayRegion(bytes, 0, strlen(pat), (jbyte*)pat);
+
+	jstring encoding = env->NewStringUTF("utf-8");
+	jstring result= (jstring) env->NewObject(strClass, ctorID, bytes, encoding);
+
+	env->DeleteLocalRef(bytes);
+	env->DeleteLocalRef(encoding);
+
+	return result;
+}
 
 static jobject callback(void* context, int what, int arg1, jstring arg2)
 {
@@ -72,11 +101,84 @@ static jobject callback(void* context, int what, int arg1, jstring arg2)
 
 	jobject ret = env->CallObjectMethod(obj, javaCallback, what, arg1, arg2);
 
-	if (arg2 != NULL) {
+	if (arg2 != NULL)
+	{
 		env->DeleteLocalRef(arg2);
 	}
 
 	return ret;
+}
+
+static void glDrawTextCallback(text_bmp_t* textBitmap, const char* text, int fontSize, void* context)
+{
+	CBContext *pContext = (CBContext *) context;
+	JNIEnv *env = getEnv(pContext);
+	if (env == NULL) {
+		__android_log_print(ANDROID_LOG_INFO, "dizuo", "empty environment");
+		return;
+	}
+
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "draw text");
+
+	jstring jtext = charToJstring(env, text);
+
+	if (jtext == NULL) {
+		__android_log_print(ANDROID_LOG_INFO, "dizuo", "empty string [%s]", text);
+		return;
+	}
+
+	int type = 0;
+	jobject bitmap = callback(context, type, fontSize, jtext);
+
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "finish callback");
+
+	if (bitmap == NULL) {
+		return;
+	}
+
+	AndroidBitmapInfo info;
+	int r = AndroidBitmap_getInfo(env, bitmap, &info);
+	if (r < 0)
+	{
+		return;
+	}
+
+	int width = info.width;
+	int height = info.height;
+
+	if (info.format != ANDROID_BITMAP_FORMAT_A_8
+			|| width <= 0
+			|| height <= 0)
+	{
+		return;
+	}
+
+	textBitmap->width = width;
+	textBitmap->height = height;
+	textBitmap->buffer = (unsigned char*)malloc(width * height);
+
+	void *pixels;
+	r = AndroidBitmap_lockPixels(env, bitmap, &pixels);
+	if (r < 0)
+	{
+		return;
+	}
+
+	int colorLen = width * height;
+	char *colors = (char *) pixels;
+
+	for (int index = 0; index < colorLen; index++) {
+		textBitmap->buffer[index] = (unsigned char) (colors[index]);
+	}
+
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "update textbitmap");
+
+	// Cannot delete. OtherWise JNI ERROR: accessed deleted local reference.
+	// if (jtext) env->DeleteLocalRef(jtext);
+
+	__android_log_print(ANDROID_LOG_INFO, "dizuo", "delete local ref");
+
+	// AndroidBitmap_unlockPixels(env, bitmap);
 }
 
 
@@ -98,12 +200,14 @@ JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeInit(JNIEnv *env, jobje
 
 JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeTestCallback(JNIEnv* env, jobject thiz, jlong handle)
 {
-	unsigned short nameBuf[] = {35140, 38451, 24066};
+	int ret = 0;
+	Context* context = (Context*)handle;
+
+/*	unsigned short nameBuf[] = {35140, 38451, 24066};
 
 	jstring jname = getJString(env, nameBuf, sizeof(nameBuf) / sizeof(nameBuf[0]));
 	int type = 1;
 	int arg = 888;
-	Context* context = (Context*)handle;
 	jobject ret = callback(&context->cbContext, type, arg, jname);
 
 	// python2.7.8 us = u'ÎÒ½ÐÈÎÑÇ·É' print(us)
@@ -112,14 +216,29 @@ JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeTestCallback(JNIEnv* en
 	type = 0;
 	arg = 111;
 	ret = callback(&context->cbContext, type, arg, jname);
+*/
+	char buffer[] = "dizuo";
+	text_bmp_t textBitmap;
+	glDrawTextCallback(&textBitmap, buffer, 14, &context->cbContext);
 
 	return (jlong)ret;
 }
 
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeDestroy(JNIEnv *env, jobject thiz, jlong handle)
+{
+	Context *context = (Context *) handle;
+
+	env->DeleteGlobalRef(context->cbContext.thiz);
+
+	delete context;
+}
+
 GLWorld gl_world;
 
-JNIEXPORT int JNICALL Java_com_dizuo_parking_JNI_nativeGLLoadData(JNIEnv *env, jobject thiz, jstring dir)
+JNIEXPORT int JNICALL Java_com_dizuo_parking_JNI_nativePrepareGLData(JNIEnv *env, jobject thiz, jstring dir, jlong handle)
 {
+	Context* context = (Context*)handle;
+
 	const char* c_data_dir = env->GetStringUTFChars(dir, NULL);
 
 	int ret = gl_world.gl_load_data(c_data_dir);
