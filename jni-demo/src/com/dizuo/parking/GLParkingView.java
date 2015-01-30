@@ -33,6 +33,12 @@ public class GLParkingView extends GLSurfaceView {
 		return FloatMath.sqrt(x*x + y*y);
 	}
 	
+	@Override
+	public void onPause() {
+		super.onPause();
+		mJni.nativeGLDestroy();
+	}
+	
 	@Override public boolean onTouchEvent(MotionEvent e) {
 		float x = e.getX();
         float y = e.getY();
@@ -85,7 +91,7 @@ public class GLParkingView extends GLSurfaceView {
 		}
 		
 		public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-			
+			mJni.nativeGLInit();
 		}
 		
 		public void onSurfaceChanged(GL10 gl, int width, int height) {

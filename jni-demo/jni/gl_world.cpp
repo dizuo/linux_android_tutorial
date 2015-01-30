@@ -1,5 +1,4 @@
 #include "gl_world.h"
-#include "under_park.h"
 
 #if defined(ES_ANDROID) || defined(__APPLE__)
 #include <GLES/gl.h>
@@ -33,7 +32,7 @@ double min(double a, double b)
 GLWorld::GLWorld() 
 : m_cameraz(-10.0f), m_fovy(60.0f)
 , m_arcball(0, 0)
-, m_park(NULL)
+, m_park(NULL), width_(0), height_(0)
 {
 	m_park = new UnderPark();
 
@@ -69,19 +68,32 @@ int GLWorld::gl_load_data(const char* root_dir)
 	return ret;
 }
 
+void GLWorld::gl_init()
+{
+	// glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_TEXTURE_2D);
+
+	__android_log_print(ANDROID_LOG_INFO, NTAG, "init");
+}
+
 void GLWorld::gl_reshape(int width, int height)
 {
-	glEnable(GL_CULL_FACE);
-
 	glViewport(0, 0, width, height);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(m_fovy, (float)width / (float)height, 0.001, 1000.0);
 
+	width_ = width;
+	height_ = height;
+
 	// pthread_mutex_lock(&eventMutex);
 	m_arcball.SetWnd(width, height);
 	// pthread_mutex_unlock(&eventMutex);
+
+	__android_log_print(ANDROID_LOG_INFO, NTAG, "reshape");
 }
 
 void GLWorld::gl_render()
@@ -107,10 +119,36 @@ void GLWorld::gl_render()
 	int old_width = 0;
 	glGetIntegerv(GL_LINE_WIDTH, &old_width);
 	glLineWidth(2.0f);
-
-	// _render_board();
-
 	glLineWidth(old_width);
+
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+#define RENDER_POI
+
+#ifdef RENDER_POI
+	// Use screenPos to render 2d dynamic label.
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();		// save projection matrix.
+		glLoadIdentity();
+		glOrthof(0, width_, 0, height_, 0, 1);
+
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();		// save modelview matrix.
+		glLoadIdentity();
+
+		glPushMatrix();
+		{
+			m_park->render_2d_poi();
+		} glPopMatrix();
+
+		glPopMatrix();		// restore modelview matrix.
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();		// restore projection matrix.
+#endif
+
+	int error = glGetError();
+	__android_log_print(ANDROID_LOG_INFO, NTAG, "error = %d", error);
 
 }
 
@@ -125,7 +163,12 @@ void GLWorld::_render_board()
 }
 
 void GLWorld::gl_destroy()
-{}
+{
+	if (m_park)
+	{
+		m_park->gl_destroy();
+	}
+}
 
 void GLWorld::gl_begin_track(int x, int y)
 {

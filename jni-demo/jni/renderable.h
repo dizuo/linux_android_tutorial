@@ -24,6 +24,7 @@ public:
 	bool init() const { return init_; }
 
 	float get_cameraz(float fovy);
+	float get_maxsize();
 
 protected:
 

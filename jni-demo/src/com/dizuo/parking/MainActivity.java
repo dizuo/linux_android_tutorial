@@ -79,12 +79,16 @@ public class MainActivity extends Activity {
         
         workThread.start();
         
+        Log.i(JNI.sTag, "onCreate");
+        
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		mJni.nativeDestroy(mNativeContext);
+		Log.i(JNI.sTag, "onDestroy");
+		
 	}
 	
 	public int initResourceFiles() {
@@ -96,30 +100,46 @@ public class MainActivity extends Activity {
         if (!file.exists()) {
         	file.mkdir();
         }
+        
+        int ret = -1;
         if (file.isDirectory())
         {
-        	// copy ...
-        	try {
-        		String srcName = "bp.asc";
-        		InputStream in = getResources().getAssets().open(srcName);
-        		
-        		String toFile = mDataDir + srcName; 
-        		OutputStream out = new FileOutputStream(toFile);
-        		
-        		byte bys[] = new byte[1024];
-        		int c = 0;
-        		while ((c = in.read(bys)) > 0) {
-        			out.write(bys, 0, c);
-        		}
-        		out.close();
-        		in.close();
-        		return 0;
-        	} catch (Exception e) {
-        		return -1;
-        	}        
+        	String fname = "bp.asc";
+        	
+        	ret = copyFile(fname);
+        	if (ret < 0) {
+        		return ret;
+        	} else 
+        	{
+        		fname = "poi.asc";
+        		ret = copyFile(fname);
+        	}
         }
         
-        return -1;
+        return ret;
+	}
+	
+	public int copyFile(String fileName) {
+		// copy ...
+    	try {
+    		// String srcName = "bp.asc";
+    		String srcName = fileName;
+    		InputStream in = getResources().getAssets().open(srcName);
+    		
+    		String toFile = mDataDir + srcName; 
+    		OutputStream out = new FileOutputStream(toFile);
+    		
+    		byte bys[] = new byte[1024];
+    		int c = 0;
+    		while ((c = in.read(bys)) > 0) {
+    			out.write(bys, 0, c);
+    		}
+    		out.close();
+    		in.close();
+    		return 0;
+    	} catch (Exception e) {
+    		return -1;
+    	}        
 	}
 	
 	/**
@@ -174,11 +194,13 @@ public class MainActivity extends Activity {
     @Override protected void onResume() {
         super.onResume();
         mGLView.onResume();
+        Log.i(JNI.sTag, "onResume");
     }
 
     @Override protected void onPause() {
         super.onPause();
         mGLView.onPause();
+        Log.i(JNI.sTag, "onPause");
     }
 }
 

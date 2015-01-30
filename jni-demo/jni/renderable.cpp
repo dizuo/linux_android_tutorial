@@ -41,6 +41,17 @@ void Renderable::update_bbox(const vec2f_t& pnt)
 
 float Renderable::get_cameraz(float fovy)
 {
+	float max_aspect = get_maxsize();
+
+#ifndef PI
+#define PI 3.14159265f
+#endif
+
+	return max_aspect / tan( fovy * PI / 180.0f );
+}
+
+float Renderable::get_maxsize()
+{
 	float max_aspect = 0;
 
 	GET_MAX_A(abs(maxp_.x), max_aspect);
@@ -48,12 +59,6 @@ float Renderable::get_cameraz(float fovy)
 	GET_MAX_A(abs(minp_.x), max_aspect);
 	GET_MAX_A(abs(minp_.y), max_aspect);
 
-#ifndef PI
-#define PI 3.14159265f
-#endif
+	return max_aspect;
 
-	__android_log_print(ANDROID_LOG_INFO, "dizuo", "%f,%f,%f,%f, %f,%f", minp_.x, minp_.y, maxp_.x, maxp_.y,
-			max_aspect, fovy);
-
-	return max_aspect / tan( fovy * PI / 180.0f );
 }

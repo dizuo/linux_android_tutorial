@@ -19,7 +19,7 @@ public class JNI {
       System.loadLibrary("native");
     }
     
-    public static String sTag = "kk";
+    public static String sTag = "dizuo";
     
     public String mDataPath = "";
     
@@ -30,6 +30,8 @@ public class JNI {
     public native long nativeTestCallback(long context);    
     public native int nativePrepareGLData(String dir, long context);
     
+    public native void nativeGLInit();
+    public native void nativeGLDestroy();
     public native void nativeGLReshape(int width, int height);
     public native void nativeGLRender();
     public native void nativeGLAdjustView(float delta_angx, float delta_angy, float delta_camz);
@@ -47,8 +49,8 @@ public class JNI {
         mTextPaint.setTextSize(fontSize);
     }
     
-    private Bitmap drawText(int fontSize, String text) {
-        
+    private Bitmap drawText(int fontSize, String text) {      
+    	
         // ≥ı ºªØª≠± 
         initTextPaint(fontSize);
         
@@ -57,7 +59,7 @@ public class JNI {
         
         Bitmap bm = null;
         
-        boolean isTest = false;
+        boolean isTest = true;
         if (isTest) {
         	bm = Bitmap.createBitmap(width, height, Config.ARGB_8888);
         } else {

@@ -13,6 +13,8 @@ JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeDestroy(JNIEnv *env, job
 JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeTestCallback(JNIEnv* env, jobject thiz, jlong handle);
 JNIEXPORT int JNICALL Java_com_dizuo_parking_JNI_nativePrepareGLData(JNIEnv *env, jobject thiz, jstring dir, jlong handle);
 
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLInit(JNIEnv *env, jobject thiz);
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLDestroy(JNIEnv *env, jobject thiz);
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLReshape(JNIEnv *env, jobject thiz, jint width, jint height);
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLRender(JNIEnv *env, jobject thiz);
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLTrackball(JNIEnv *env, jobject thiz, jint type, jint x, jint y);

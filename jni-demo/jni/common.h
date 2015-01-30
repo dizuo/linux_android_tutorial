@@ -22,8 +22,23 @@ typedef struct sVec3f
 	float z;
 } vec3f_t;
 
+enum {
+	BITMAP_FORMAT_RGBA = 0,
+	BITMAP_FORMAT_RGB565,
+	BITMAP_FORMAT_ALPHA
+};
+
+typedef struct _textBitmap {
+	unsigned char* buffer;
+	int width;
+	int height;
+	int format;
+} text_bmp_t;
+
 #define SYS_OK (0)
 #define SYS_NOT_FINISH (1)
 #define SYS_ERROR (-1)
+
+#define NTAG "dizuo_nt"
 
 #endif

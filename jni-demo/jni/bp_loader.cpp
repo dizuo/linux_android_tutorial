@@ -43,57 +43,18 @@ bool BPLoader::create_from_file(const char* fname)
 	return true;
 }
 
-bool BPLoader::load_poi_file(const char* fname)
-{
-	FILE* fp = fopen(fname, "r");
-	if (!fp)
-	{
-		printf("failed to open file [ %s ]\n", fname);
-		return false;
-	}
-
-	const char* token = " ,";
-	char buffer[1024];
-	while (fgets(buffer, 1024, fp))
-	{
-		char* pch = strtok(buffer, token);
-		poi_t item;
-		memset(&item, 0, sizeof(poi_t));
-
-		if (pch)
-		{
-			item.pos.x = atof(pch);
-			pch = strtok(NULL, token); 
-			if (pch)
-			{
-				item.pos.y = atof(pch);
-				pch = strtok(NULL, token);
-				if (pch)
-				{
-					strcpy(item.name, pch);
-				}
-			}
-
-			m_poivec.push_back(item);
-		}
-
-	}
-	fclose(fp);
-
-	return true;
-}
-
-int BPLoader::transform_poi_to_renderable()
-{
-	return true;
-}
-
 void BPLoader::render()
 {
+	glDisable(GL_BLEND);
+	glDisable(GL_TEXTURE_2D);
 	glEnableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(3, GL_FLOAT, 0, &(m_triangles[0].x));
 	glDrawArrays(GL_TRIANGLES, 0, m_triangles.size());
 
 	glDisableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnable(GL_BLEND);
+	glEnable(GL_TEXTURE_2D);
 }

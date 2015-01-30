@@ -31,12 +31,6 @@ typedef struct _context {
 	CBContext cbContext;
 } Context;
 
-typedef struct _textBitmap {
-	unsigned char* buffer;
-	int width;
-	int height;
-} text_bmp_t;
-
 static JNIEnv *getEnv(CBContext *context) {
 	JavaVM *jvm = context->jvm;
 	JNIEnv *env;
@@ -113,26 +107,24 @@ static void glDrawTextCallback(text_bmp_t* textBitmap, const char* text, int fon
 {
 	CBContext *pContext = (CBContext *) context;
 	JNIEnv *env = getEnv(pContext);
-	if (env == NULL) {
-		__android_log_print(ANDROID_LOG_INFO, "dizuo", "empty environment");
+	if (env == NULL)
+	{
+		__android_log_print(ANDROID_LOG_INFO, NTAG, "empty environment");
 		return;
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "dizuo", "draw text");
-
 	jstring jtext = charToJstring(env, text);
 
-	if (jtext == NULL) {
-		__android_log_print(ANDROID_LOG_INFO, "dizuo", "empty string [%s]", text);
+	if (jtext == NULL)
+	{
+		__android_log_print(ANDROID_LOG_INFO, NTAG, "empty string [%s]", text);
 		return;
 	}
 
 	int type = 0;
 	jobject bitmap = callback(context, type, fontSize, jtext);
-
-	__android_log_print(ANDROID_LOG_INFO, "dizuo", "finish callback");
-
-	if (bitmap == NULL) {
+	if (bitmap == NULL)
+	{
 		return;
 	}
 
@@ -146,16 +138,20 @@ static void glDrawTextCallback(text_bmp_t* textBitmap, const char* text, int fon
 	int width = info.width;
 	int height = info.height;
 
-	if (info.format != ANDROID_BITMAP_FORMAT_A_8
+	if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888
+	// if (info.format != ANDROID_BITMAP_FORMAT_A_8
 			|| width <= 0
 			|| height <= 0)
 	{
+		__android_log_print(ANDROID_LOG_INFO, NTAG, "error format [%d, %d, %d]", info.format, width, height);
+
 		return;
 	}
 
+	textBitmap->format = BITMAP_FORMAT_RGBA;
 	textBitmap->width = width;
 	textBitmap->height = height;
-	textBitmap->buffer = (unsigned char*)malloc(width * height);
+	textBitmap->buffer = (unsigned char*)malloc(width * height * 4);
 
 	void *pixels;
 	r = AndroidBitmap_lockPixels(env, bitmap, &pixels);
@@ -164,25 +160,22 @@ static void glDrawTextCallback(text_bmp_t* textBitmap, const char* text, int fon
 		return;
 	}
 
-	int colorLen = width * height;
+	int colorLen = width * height * 4;
 	char *colors = (char *) pixels;
 
-	for (int index = 0; index < colorLen; index++) {
+	for (int index = 0; index < colorLen; index++)
+	{
 		textBitmap->buffer[index] = (unsigned char) (colors[index]);
 	}
-
-	__android_log_print(ANDROID_LOG_INFO, "dizuo", "update textbitmap");
 
 	// Cannot delete. OtherWise JNI ERROR: accessed deleted local reference.
 	// if (jtext) env->DeleteLocalRef(jtext);
 
-	__android_log_print(ANDROID_LOG_INFO, "dizuo", "delete local ref");
-
-	// AndroidBitmap_unlockPixels(env, bitmap);
+	AndroidBitmap_unlockPixels(env, bitmap);
 }
 
+GLWorld gl_world;
 
-// com.dizuo.jni_demo/nativeInit
 JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeInit(JNIEnv *env, jobject thiz)
 {
 	int* engine_handle = &global_var;
@@ -194,6 +187,8 @@ JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeInit(JNIEnv *env, jobje
 	env->GetJavaVM(&pjvm);
 	context->cbContext.jvm = pjvm;
 	context->cbContext.thiz = env->NewGlobalRef(thiz);
+
+	gl_world.set_callback(glDrawTextCallback, &context->cbContext);
 
 	return (jlong)context;
 }
@@ -217,9 +212,10 @@ JNIEXPORT jlong JNICALL Java_com_dizuo_parking_JNI_nativeTestCallback(JNIEnv* en
 	arg = 111;
 	ret = callback(&context->cbContext, type, arg, jname);
 */
-	char buffer[] = "dizuo";
-	text_bmp_t textBitmap;
-	glDrawTextCallback(&textBitmap, buffer, 14, &context->cbContext);
+
+	// char buffer[] = "dizuo";
+	// text_bmp_t textBitmap;
+	// glDrawTextCallback(&textBitmap, buffer, 14, &context->cbContext);
 
 	return (jlong)ret;
 }
@@ -232,8 +228,6 @@ JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeDestroy(JNIEnv *env, job
 
 	delete context;
 }
-
-GLWorld gl_world;
 
 JNIEXPORT int JNICALL Java_com_dizuo_parking_JNI_nativePrepareGLData(JNIEnv *env, jobject thiz, jstring dir, jlong handle)
 {
@@ -251,6 +245,16 @@ JNIEXPORT int JNICALL Java_com_dizuo_parking_JNI_nativePrepareGLData(JNIEnv *env
 	return ret;
 }
 
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLDestroy(JNIEnv *env, jobject thiz)
+{
+	gl_world.gl_destroy();
+}
+
+JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLInit(JNIEnv *env, jobject thiz)
+{
+	gl_world.gl_init();
+}
+
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLReshape(JNIEnv *env, jobject thiz, jint width, jint height)
 {
 	gl_world.gl_reshape(width, height);
@@ -263,9 +267,12 @@ JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLRender(JNIEnv *env, jo
 
 JNIEXPORT void JNICALL Java_com_dizuo_parking_JNI_nativeGLTrackball(JNIEnv *env, jobject thiz, jint type, jint x, jint y)
 {
-	if (type == 0) {
+	if (type == 0)
+	{
 		gl_world.gl_begin_track(x, y);
-	} else if (type == 1) {
+	}
+	else if (type == 1)
+	{
 		gl_world.gl_tracking(x, y);
 	}
 }
